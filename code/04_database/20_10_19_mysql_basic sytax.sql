@@ -96,4 +96,32 @@
 	where name = "jin"
 # 7. Delete
 	delete from user1 where rdate < "2016-01-01"
+
+# 8. Group by - having
+	# city 테이블에서 나라별 도시의 갯수를 출력
+	select * from city
+	
+	select CountryCode, count(CountryCode) from city
+	group by CountryCode
+	
+	# countrylanguage 테이블에서 전체 언어의 갯수를 출력
+	select * from countrylanguage
+	
+	select count(distinct(Language)) from countrylanguage
+	
+	# 대륙별 인구수와 GNP의 최대값을 출력
+	select * from country
+	
+	select continent, max(Population), max(GNP) from country
+	group by continent
+	
+	# 대륙별 전체인구를 구하고 5억 이상인 대륙만 출력
+	select * from country
+	
+	select continent, sum(population) as TotalP from country
+	# where population > 500000000
+	group by continent
+	having TotalP > 500000000
+		# where: from에 있는 테이블에 적용되는 조건
+		# having: group by가 동작한 테이블에 적용되는 조건
 	
