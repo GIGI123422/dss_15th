@@ -38,50 +38,57 @@ AWS 고정 IP 설정하고나서 서버 종료시 과금 시작
 			- 나가기: exit
 			- 툴 HeidiSQL
 
-
-		4. tmux, terminal multiplexer: window 와 session단위로 관리하는 도구
-			- 하나의 창이 아닌 여러 창을 함께 사용을 위해
-			tmux new -s '세션 명' : 새로운 세션 생성
-			tmux new -s '세션 명' -n 'window name' : 새로운 세션 생성
-			tmux ls : 세션 목록
-			tmux kill-session -t '세션 넘버' : 특정세션 강제 종료
-			tmux attach -t '세션명' : 세션 다시 불러오기, 세션 접속
-			exit: 세션 종료
-
-			(ctrl + b) d : 세션 중단
-			(ctrl + b) c : 새 윈도우 생성
-			(ctrl + b) b '세션 넘버' : 새 윈도우 이동
-
 # MYSQL Summary
 	* SQL문
-	01. SHOW
-	02. ALTER : 테이블의 속성을 바꿔줄때
-	03. DROP: 테이블 DB 속성 등등 날릴때
-	04. INSERT
-	05. SELECT
-		가. DISTINCT : 뚜렷하게 구분되는 ,컬럼의 중복된 데이터를 제거 할때
-		나. OREDER BY "열" ASC/ DESC
-		다. LIKE : 문자의 일부분을 조건으로 줄떄
-		라. IN : 한 컬럼의 여러개 데이터를 조건으로 할때
-		마. CONCAT : 컬럼의 데이터들을 합쳐서 새로운 컬럼으로 보여줄때
-		+ BETWEEN A AND B : A<B
-	06. UPDATE
-	07. DELETE
-
-	- SHOW: 속성값을 보여주다
+	01. SHOW : 속성값 표출
+		SHOW DATABASES;
 		SHOW VARIABLES like "character_set_database";
 
-	- ALTER : 바꾸다, 변화하다
-		ALTER DATABASE test CHARACTER SET = UTF8;
-		ALTER TABLE USER2 ADD tmp TEXT;
-		ALTER TABLE USER2 MODIFY COLUMN tmp INT(3);
-		ALTER TABLE USER2 DROP tmp;
+	02. ALTER : 테이블의 속성 & 값 변경시
+		ALTER DATABASE test CHARACTER SET = utf8
+		ALTER TABLE user2 ADD tmp TEXT;
+		ALTER TABLE user2 MODIFY COLUMN tmp INT(3);
+		ALTER TABLE user2 DROP tmp
 
-	- LIMIT : 제한
-		select * from USER1 limit 3;
-			-> 3개로 제한
-		select * from USER1 limit 2,2;
-			-> 2번째 부터 2개를 표출 ex) 3,4 만 나옴
+	03. DROP: 테이블 DB 및 테이블 삭제 시
+		DROP DATABASE tmp;
+		DROP TABLE tmp;
+
+	04. INSERT
+		INSERT INTO user1(user_id, name, email, age, rdate)
+		VALUES (1, "jin", "pdj@gmail.com", 30, now()),
+			(2, "peter", "peter@daum.net", 33, '2017-02-20'),
+			(3, "alice", "alice@naver.com", 23, '2018-01-05'),
+			(4, "po", "po@gmail.com", 43, '2002-09-16'),
+			(5, "andy", "andy@gmail.com", 17, '2016-04-28'),
+			(6, "jin", "jin1224@gmail.com", 33, '2013-09-02');
+
+	05. SELECT
+		가. OREDER BY "열" ASC/ DESC
+		나. WHERE 절: from 까지 계산된 데이터에 조건을 걸어 줄때
+			- LIKE : 문자의 일부분을 조건으로 줄떄
+			- IN : 한 컬럼의 여러개 데이터를 조건으로 할때
+
+	06. UPDATE
+		UPDATE <table_name>
+		SET <column_name_1> = <value_1>, <column_name_2> = <value_2>,
+		WHERE <condition>
+
+	07. DELETE
+		DELETE FROM <table_name>
+		WHERE <condition>
+
+	+ 다양한 함수들
+		- COUNT : 테이블에 몇개의 데이터가 있는지, Group by와 같이 활용
+		- DISTINCT : 뚜렷하게 구분되는 ,컬럼의 중복된 데이터를 제거 할때
+		- CONCAT : 컬럼의 데이터들을 합쳐서 새로운 컬럼으로 보여줄때
+			ex) SELECT email, CONCAT(name, "(", age, ")") AS "name_age" FROM user1
+		- BETWEEN A AND B : 조건 A < B
+		- LIMIT : 제한
+			select * from USER1 limit 3;
+				-> 3개로 제한
+			select * from USER1 limit 2,2;
+				-> 2번째 부터 2개를 표출 ex) 3,4 만 나옴
 +
 	명령어
 		- echo
@@ -103,8 +110,10 @@ AWS 고정 IP 설정하고나서 서버 종료시 과금 시작
 			exit: 세션 종료
 
 			(ctrl + b) d : 세션 중단
+			(ctrl + b) % : 듀얼 디스플레이
+			(ctrl + b) 방향키 : 듀얼 디스플레이 이동
 			(ctrl + b) c : 새 윈도우 생성
-			(ctrl + b) b '세션 넘버' : 새 윈도우 이동
+			(ctrl + b) 세션 넘버 : 윈도우 이동
 
 	단어
 		continent 대륙
