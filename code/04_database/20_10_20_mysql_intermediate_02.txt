@@ -1,0 +1,107 @@
+
+# 영상정리
+	01_MYSQL3_20191031_01:
+		- 리눅스 편의 기능 설명
+		- mysql 전시간 요약 및 quiz2 문제 풀이
+		- 03_mysql_intermediate.pdf 다루기 위해 sakila-db 데이터 다운 받아서 셋팅
+	02_MYSQL3_20191031_02:
+		- mysql intermediate
+# Summary
+- basic sytax
+	- group by:  여러개 동일한 데이터를 가지는 특정 칼럼을 합쳐주는 역할
+	- having: group by가 적용된 결과에 조건을 걸어주는 역할
+		- where: from 절까지 적용된 결과에 조건을 걸어주는 역할
+- 데이터 타입
+- ubuntu 상황에서 DB에 sql 적용 방법 2가지
+	- 명령어로
+	- DB 접속하여
+- intermediate
+	01. ceil, round, truncate
+		- 올림 ceil(), ~ 천장을 만들다
+			select ceil(12.345) # 13
+		- 반올림 round()
+			select round(12.345, 2) # 12.35
+		- 반내림 truncate(), 자르다, 일부를 생략하다.
+			select truncate(12.345, 2) # 12.34
+	02. Date_Format: 날짜 데이터의 포멧을 변경해주는 함수
+		select DATE_FORMAT(payment_date, "%Y-%m") as monthly, count(amount), sum(amount)
+		from payment
+		group by monthly
+	03. 조건문
+		- IF(조건, 참, 거짓)
+		- IFNULL(열, 값): 해당 열에 null 값 존재시 표출 값 지정
+		- CASE: switch 문
+			CASE
+				WHEN (조건1) THEN (결과1)
+				WHEN (조건2) THEN (결과2)
+				ELSE (결과3)
+			END AS 열 이름
+	04. join
+		- inner join, 교집합
+		- right join
+		- left join
+		- union, 합집합
+			- union: 중복데이터 제거
+				SELECT name
+				FROM user
+				UNION
+				SELECT addr
+				FROM addr
+			- union all: 중복데이터 표출
+		- outer join: 명령어가 따로 없기에 union으로 구현해야 함
+			SELECT id, user.name, addr.addr
+			FROM user
+			LEFT JOIN addr
+			ON user.user_id = addr.user_id
+			UNION
+			SELECT id, user.name, addr.addr
+			FROM user
+			RIGHT JOIN addr
+			ON user.user_id = addr.user_id
+	05. sub-query: 쿼리안의 쿼리문
+		- select 절에 사용
+			SELECT
+				(SELECT count(name) FROM city) AS total_city,
+				(SELECT count(name) FROM country) AS total_country,
+				(SELECT count(DISTINCT(Language)) FROM countrylanguage) AS total_language
+		- from 절에 사용
+			SELECT *
+			FROM
+				(SELECT countrycode, name, population
+				FROM city
+				WHERE population > 8000000) AS city
+			JOIN
+				(SELECT code, name
+				FROM country) AS country
+			ON city.countrycode = country.code
+		- where 절에 사용
+			SELECT code, name, HeadOfState
+			FROM country
+			WHERE code IN (
+				SELECT DISTINCT(countrycode) FROM city WHERE population > 8000000
+			)
+	06. index: 테이블의 데이터 검색시 속도를 빠르게 하기위한 기능
+		- where 절에 자주 사용하는 컬럼을 지정
+		- 단점: index를 많이 사용시 insert 시간이 오래 걸릴수 있다.
+		- 결론: where 절에 자주 사용하는 컬럼에만 적용할것, 남용 금지
+		- 사용
+			create index <인덱스 이름>
+			on <테이블 이름> (컬럼1, 컬럼2)
+		- 제거
+			drop index <인덱스 이름>
+			on <테이블 이름> (컬럼1, 컬럼2)
+		++ explain: 실행 계획 확인 함수, index 사용하는 지 확인 가능
+			- 사용 예시
+				explain
+				select count(*)
+				from salaries
+				where to_date > "2000-01-01"
+	07. view: 가상 테이블로 특정 데이터만 보고자 할때 사용 -> 단축키 혹은 매크로
+		- 실제 데이터는 저장 X, 쿼리 단순화 가능, 수정 X, 인덱스 설정 X
+		- 사용
+			create view <테이블 명> as
+			<query 문>
+
+* Quiz03.pdf
+	-> 문제 풀이시 한문장씩 집중
+	-> sub-query에만 너무 집중해서 join으로만 해결할수 있는 문제 놓침
