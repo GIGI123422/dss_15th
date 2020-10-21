@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 # 소수점 올림, 반올림, 버림 함수
 	# 소수점 올림
 	select ceil(12.345)
@@ -495,5 +494,4 @@ use world
 	select code, name from country
 	# 뷰 활용
 	select * from city
->>>>>>> e88d9a714590f3b39acad8ecf440c9006683a944
-	join code_name on city.countrycode = code_name.code
+	join code_name on city.countrycode = code_name.codetest

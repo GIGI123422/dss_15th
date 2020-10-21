@@ -1,5 +1,4 @@
-<<<<<<< HEAD
-<<<<<<< HEAD
+
 # Quiz 03 join & sub-query
 # Quiz 1/ 멕시코보다 인구가 많은 나라 이름과 인구수를 조회하시고 
 # 인구수 순으로 내림차순 하세요
@@ -270,4 +269,3 @@ on col.Code = ci.CountryCode
 having ci.Population > 3000000
 order by population desc
 
->>>>>>> e88d9a714590f3b39acad8ecf440c9006683a944
