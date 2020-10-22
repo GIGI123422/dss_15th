@@ -1,0 +1,166 @@
+04.MYSQL_03
+	- view index 사용법
+	- 주피터 노트북에서 DB 접속하여 활용
+		import MySQLdb
+	- mongoDB 설치하는 과정
+		06_mongodb.pdf 참고
+		robo3T -> heidisql 같은 프로그램
+05. SQLAlchemy_mongoDB_pymondgo_20191101_01
+	- AWS 인스턴스 이미지 뜨는 작업
+	- SQLAlcheby 서버에 설치 및 이론 실습 설명
+06. SQLAlchemy_mongoDB_pymondgo_20191101_02
+	- SQLAlcheby 실습 및 설명
+	- mongoDB
+
+
+1. SQLALchemy
+	가) 이론
+		1. python에서 사용하는 ORM
+		2. ORM: Object Relational Mapping
+		    - 데이터 베이스를 객체화 시켜서 데이터 베이스에 있는 데이터를 CRUD 할수 있다.
+		        - CRUD: Create, Read, Update, Delete
+		    - 쿼리 대신 함수 형태로 CRUD를 할수 있습니다.
+		    - 사용하는 데이터 베이스를 변경하는 경우 엔진만 바꿔주면 됩니다.
+		3. Transaction
+		    - 정의
+		        - 데이터베이스의 상태를 변환시키는 하나의 논리적 기능을 수행하기 위한 작업의 단위
+		        - 한꺼번에 모두 수행되어야 할 일련의 연산들을 의미
+		    - 특징
+		        - 1. 트랜잭션은 데이터베이스 시스템에서 병행 제어 및 회복 작업 시 처리되는 작업의 논리적 단위이다.
+
+		        - 2. 사용자가 시스템에 대한 서비스 요구 시 시스템이 응답하기 위한 상태 변환 과정의 작업단위이다.
+
+		        - 3. 하나의 트랜잭션은 Commit되거나 Rollback된다.
+		    - 정리: transaction으로 묶은 작업은 동시에 실행되지 않는다.
+		        - ex) 계좌에 10000원이 있고 인출을 하려 한다면
+		            - 1. 금액 확인 2. 금액 인출
+		            - 위 두과정을 Transaction으로 묶음
+		            - 그러면 동시에 8000원, 5000원 인출시도가 와도 하나씩 천천히 처리
+		            - 없었다면 계좌에 -3000원만 남았을것!
+		    - *** mongo db에서는 transaction이 없다
+
+	나) 설치: pip install sqlalchemy
+
+	다) SQLALchemy 패키지를 사용해 MYSQL DB와 연결하여 다루는 실습
+	    1. DB 연결
+	    2. Table 객체 생성을 위한 클래스 작성
+	    3. DB session 연결
+	    4. DB commit() == insert
+	        - 객체가 가진 데이터 올라감
+	    + DB 데이터를 가져와 저장하고 작업한뒤 적용 -> commit
+
+	라) SQLALChemy 사용 >> github 자료 올리는 과정과 흡사
+		1. 사전 준비
+		    - 필요 패키지
+		        ```
+		        from sqlalchemy import *
+		        from sqlalchemy.ext.declarative import declarative_base
+		        from sqlalchemy.orm import sessionmaker
+		        ```
+		    - DB 연결: engine = create_engine("mysql://root:dss@13.125.153.195/test")
+		    - 테이블 객체 생성을 위한 클래스 작성
+		        ```
+		        Base = declarative_base()
+
+		        class User(Base):
+
+		            __tablename__ = "user1" # 테이블 이름
+
+		            # 컬럼 데이터 작성
+		            user_id = Column(Integer, primary_key=True)
+		            name = Column(String(20))
+		            email = Column(String(30))
+		            age = Column(Integer)
+		            rdate = Column(DateTime)
+
+		            # 생성자 함수
+		            def __init__(self, name, email, age, rdate):
+		                self.name = name
+		                self.email = email
+		                self.age = age
+		                self.rdate = rdate
+
+		            # repr 함수
+		            def __repr__(self):
+		                return "<User {}, {}, {}, {}>".format(
+		                    self.name, self.email, self.age, self.rdate)
+		        ```
+		    - engine에 연결된 데이터 베이스(test)에 테이블 생성
+		        - Base.metadata.create_all(engine)
+		    - 데이터 베이스에 session 연결
+		        ```
+		        Session = sessionmaker(engine)
+		        session = Session()
+		        session
+		        ```
+		2. INSERT
+		    - 사용 예시/ ex) git hub와 비교하면 좋음
+		        - 1. insert를 위해 만들어진 클래스로 객체를 선언
+		            - user = User("jin", "jin@gmail.com", 27, "2016-03-21")
+		        - 2. 세션 리스트에 올림
+		            - session.add(user)
+		        - 3. 커밋하여 실제 DB에 반영
+		            - session.commit()
+		    - 다양한 사용
+		        - 다중 insert
+		            ```
+		            users = [
+		                    User("alice", "alice@gmail.com", 25, "2018-02-21"),
+		                    User("andy", "andy@daum.net", 33, "2015-10-21"),
+		                ]
+		            session.add_all(users)
+		            session.commit()
+		            ```
+		        - session의 객체 초기화
+		            - session.rollback()
+		3. SELECT
+		    - 사용 예시
+		        - all
+		            - results = session.query(User).all()
+		        - filter: ==, !=, >, <, <=, >=, like, in_
+		            - results = session.query(User).filter(User.name == "jin")
+		            - results = session.query(User).filter(User.email.like("%gmail%"))
+		            - results = session.query(User).filter(User.name.in_(["alice", "andy"]))
+		            - or_
+		                ```
+		                results = session.query(User).filter(
+		                    or_(User.name == "jin", User.age == 33)
+		                )
+		                ```
+		    - 다양한 함수들: order by, count
+		        - order by
+		            - results = session.query(User).order_by(User.age.desc())
+		        - count
+		            - session.query(User).count()
+		4. UPDATE
+		    - 사용 예시
+		        - 1. 변경할 데이터 읽어 드리기
+		            - 예시1) data = session.query(User).filter(User.name == "jin")
+		            - 예시2) data = session.query(User).filter(User.name == "andy").one()
+		        - 2. 값 변경
+		            - data.age = 30
+		        - 3. 변경
+		            - session.add(data)
+		            - session.commit()
+		5. DELETE
+		    - 행 삭제
+		        - session.query(User).filter(User.name == "jin").delete()
+		        - DB 적용: session.commit()
+		    - 테이블 삭제: User.__table__.drop(engine)
+		        - 세션이 아니어서 바로 삭제
+
+		6. WITH PANDAS
+		    - 필요한 패키지
+		        - import seaborn as sns
+		        - import pandas as pd
+		    - 데이터 저장하기
+		        - iris_df.to_sql(name="iris", con=engine, if_exists="replace")
+		    - 데이터 가져오기
+		        ```
+		        QUERY = """
+		            SELECT *
+		            FROM city
+		        """
+		        city_df = pd.read_sql(QUERY, engine)
+		        city_df.tail()
+	        ```

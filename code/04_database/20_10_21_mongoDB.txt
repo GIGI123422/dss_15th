@@ -1,0 +1,129 @@
+06. SQLAlchemy_mongoDB_pymondgo_20191101_02
+	- SQLAlcheby 실습 및 설명
+	- mongoDB
+	- 환경구축: mongoDB.pdf 파일참조
+		- robo 3T 활용
+07. SQLAlchemy_mongoDB_pymondgo_20191101_03
+	- mongodb 설명
+* MongoDB
+	- 용어
+		- table >> collections
+		- row >> document
+	* 참고: 행과 열 상관없이 데이터 집어넣어줘도 됨
+	1. Create
+		- db
+			use dss # dss라는 이름의 DB 생성
+					# 쿼리 창의 DB도 설정됨
+			db # 현재 사용중인 DB 확인
+			show dbs # DB list 확인
+		- table -> collection
+			 - db.createCollection(name, [option])
+			 	- capped : true로 설정하면 collection의 최대 용량을 설정 (최대 용량의 크기는 size 옵션으로 설정), 설정된 최대용량 이상으로 데이터가 입력되면 오래된 데이터 부터 자동으로 삭제됩니다.
+			 	- autoIndex : true로 설정하면 _id 필드에 index가 자동으로 생성됩니다.
+				- size : 숫자 데이터를 사용하며 collection의 최대 사이즈를 byte 단위로 지정
+				- max : 숫자 데이터를 사용하며 최대 document 갯수를 설정
+			- ex)
+				- db.createCollection("info1", { autoIndexId: true, capped: true, size: 500, max:5 })
+				- db.createCollection("info2", { autoIndexId: true, capped: true, size: 50, max:5 })
+
+	2. Insert = make document
+		- db.<collection_name>.insert(<document>)
+		- ex)
+			- db.user.insert({"name":"alice", "age":20, “email":"alice@gmail.com"})
+			- db.info1.insert({ "subject":"python", "level":3 })
+			- db.info1.insert( [
+				{ "subject":"python", "level":3 },
+				{ "subject":"web", "level":1 },
+				{ "subject":"sql", "level":2 },
+				{ "subject":"python", "level":3 },
+				{ "subject":"web", "level":1 },
+				{ "subject":"sql", "level":2 },
+				])
+
+	3. delete
+			- db
+				- db.dropDatabase() # use로 선택된 DB 삭제
+			- table
+				- db.articles.drop()
+			- document
+				- db.info.remove( {level:2} )
+
+	4. Select == find
+		- db.collection.find(query, projection)
+			- query : document 조회 조건을 설정. 모든 document를 조회 할때는 ({})를 사용
+			- projection : document를 조회할때 보여지는 필드(컬럼)를 정의
+		- 다양한 사용
+			- info collection에 있는 모든 document 조회
+				- db.info.find()
+				- db.getCollection('info').find({})
+			- subject가 python인 document 조회
+				- db.info.find({"subject": "python"})
+		- project 사용
+			- true 검색, false 검색x, 없으면 default true
+			- db.info.find({},{"_id":false, "level":false})
+			- db.info.find({},{"subject":true, "level":true})
+			- db.info.find({},{"_id":false, "subject":true, "level":true})
+		- where
+			- db.info.find( { $where: "this.level == 1"} )
+		- sort
+			# info 컬렉션의 document를 level 오름차순으로 정렬
+				db.info.find().sort({"level":1})
+			# info 컬렉션의 document를 level 내림차순으로 정렬
+				db.info.find().sort({"level":-1})
+			# level을 기준으로 내림차순으로 정렬한 후 subject를 기준으로 오름차순으로 정렬
+				db.info.find().sort({"level":-1, "subject":1})
+		- limit
+			# document의 결과를 3개 까지만 출력
+				db.info.find().limit(3)
+			# document의 결과를 level로 내림차순으로 정렬하고 3개까지만 출력
+				db.info.find().sort({"level":-1}).limit(3)
+			# document를 3번째 부터 출력
+				db.info.find().skip(2)
+			# document를 3번째 부터 3개 출력
+				db.info.find().skip(2).limit(3)
+
+	5. 비교 연산자
+		# level이 2 이하인 document를 조회
+			db.info.find({"level": {$lte: 2} })
+		# level이 3 이상인 document를 조회
+			db.info.find({"level": {$gte: 3} })
+		# subject가 java와 python을 포함하는 document 조회
+			db.info.find( {"subject": {$in: ["java", "python"]}} )
+
+	6. 논리 연산자
+		# 전체
+			$or : 조건중 하나라도 true이면 true
+			$and : 모든 조건이 true이면 true
+			$not : 조건중 하나라도 false이면 true
+			$nor : 모든 조건이 false이면 true (or와 반대 개념)
+		# subject가 python이고 level이 4이상인 document 조회
+			db.info.find({ $and: [ { "subject":"python" }, { "level": {$gte: 3} } ] })
+		# subject가 python이아니고 level이 1이하가 아닌 document 조회
+			db.info.find({ $nor: [ { "subject":"python" }, { "level": {$lte: 1} } ] })
+		# level이 2보다 크지 않은 document 조회 (2 포함)
+			db.info.find({ "level": { $not: {$gt: 2} } })
+
+	7. update
+		- db.collection.update( query, update, { upsert: <bool>, multi: <bool> })
+			upsert : insert와 update의 합성어 (데이터가 있으면 update, 없으면 insert 한다는 의미)
+			multi : true로 설정되면 여려개의 document를 수정합니다. 기본값은 false
+		- 사용 예시
+			# 특정 document를 새로운 document로 수정하기
+				db.info.update(
+					{ "subject": "html" },
+					{"subject":"sass", "level":2}
+				)
+				db.info.update(
+					{ "subject": "less" },
+					{ "subject":"less", "level":2},
+					{ "upsert":true}
+				)
+	    - db.info.update( { subject: "java" }, { $set: { level: 4 } } )
+	    	- set을 사용하면 특정 document의 필드를 수정할수 있습니다.
+			- unset를 사용하면 특정 document의 필드 제거할수 있습니다.
+
+
+
+	5. set
+	6. function
+
