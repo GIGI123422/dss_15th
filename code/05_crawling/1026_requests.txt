@@ -1,0 +1,187 @@
+requests_201026
+* 영상강의 내용 정리
+	1) requests1
+		requests_01
+			- web.pdf 기본적인 용어 정리및 설명
+		requests_03
+			- requests: Naver에서 금융정보 데이터 수집
+		requests_04
+			- API 활용 편
+			- DarkSky 사용
+			- AWS jupyter notebook 폰트 바꾸는 법
+
+	2) requests2_pysheets
+		requests2_pysheets_01
+			- SQL 퀴즈
+			- 직방 웹 크롤링 과정 설명
+		requests2_pysheets_02
+			- **직방 ids를 가지고 item 가져오는 부분 url 달라져 실습진행 불가
+		requests2_pygsheets_03
+			- 직방데이터 구글 스트레프트 시트에 저장(pygsheets)
+				- oauth 개념
+				- OAuth 인증 파일 생성 --> Google APIs 활용 방법
+				*** OAuth 클라이언트 ID 만드는데 유형에 기타가 없음 -> 크롬 앱
+		requests2_pygsheets_04
+			- 직방데이터 구글 스트레프트 시트에 저장 이어서(pygsheets)
+			- Daum에서 환율정보 크롤링
+				- 쿼리문이 없는 Request URL도 사용가능
+				- 이번 요청에는 user-agent와 referer 값을 헤더로 넣어주니 동작
+
+	3) html_css_selector_requests3
+		html_css_selector_requests3_01 >> 다시 봐야함
+			- 이전강의에서 JSON 웹 크롤링 한 방식 정리
+			- 앞으로 할 HTML 웹 크롤링 방식 설명
+			- html 구조 설명
+		html_css_selector_requests3_02 >> 다시 봐야함
+			- html 구조 설명 이어서
+				- fastcampus 이미지 받아오는데 HTML 바뀜, <img> 태그안보임
+		html_css_selector_requests3_03
+			- HTML 이용한 크롤링
+				- 네이버 연관 검색어 >> 네이버에 연관검색어가 이제 없음
+					>> 다음으로 대체
+				- 다음 뉴스 데이터
+					- 다음 뉴스 탭의 메인 페이지 15개 기사의 제목, 링크, 내용수집
+		html_css_selector_requests3_04
+			- Gmarket 크롤링 하여 상품 이미지 저장
+
+0. 사용 라이브러리
+	- 시각화
+		import matplotlib as mpl
+		import matplotlib.pyplot as plt
+	- 웹크롤링
+		import requests
+		from bs4 import BeautifulSoup # HTML 파싱하기 위해
+	- 정규화
+		import sklearn
+
+? css-selector에 #은 왜 하는지?
+1. 웹 크롤링
+	- 우선 정적 페이지, 동적 페이지 판단
+		- 페이지의 변화시 URL이 변하는 지
+			- 변함: 동적 페이지 >> json 방식
+			- 변하지 않음: 정적 페이지 >> html 방식
+	- 사이트 크롤링 해도 되는지 여부 확인
+		- url/robot.txt 접속하여 제한사항이 어떤 것이 있는지 확인
+	* requests.get 시 Response[400]으로 반환되는 경우 헤더에 user-agent 포함해줌
+		- 그래도 안되면 selenium 써야함
+
+1-1. JSON 방식
+	가) 웹 서비스 분석: URL 확인 -> Requests Url 가져오기
+		- 방식: get방식, post방식
+		- 사용:
+			1. 원하는 페이지 개발자 모드 >> Network탭 >> XHR 탭(데이터 송수신 정보 확인 가능)
+			2. Requests URL 정보 알아오기
+				ex) code, page_size, page = "KOSPI", 20, 1
+					url = "https://m.stock.naver.com/api/json/sise/dailySiseIndexListJson.nhn?code={}&pageSize={}&page={}\
+					".format(code, page_size, page)
+
+			+ tip: 웹페이지 보다 모바일 페이지가 기능이 적어 활용에 수월
+			+ User-Agent: 내 PC 환경정보
+
+	나) request, response: json or html 데이터를 얻기
+		- 사용: response = requests.get(url)
+
+	다) json 데이터(문자열) >> dict(파싱) >> DataFrame
+		- 사용: datas = reponse.json()["result"]["sisList"]
+			- result = pd.DataFrame(datas)
+		- type: dict,[]안의 데이터 확인
+			ex)
+				type(response.text)   # str
+				type(response.json()) # dict
+
+1-2. HTML 방식
+? BeautifulSoup 의 파라미터중 markup은 bytes, text 타입을 쓸수있는데 이유를 알수 있을까요?
+	가) 웹페이지 분석: URL 찾기 - 코드는 JSON과 동일
+		1. 원하는 페이지 개발자 모드 >> Network탭 >> ALL탭(리스트의 맨위)
+	나) request, response: HTML - JSON과 동일
+	다) HTML(str) >> BeautifulSoup obj (css-selector) >> DF
+		dom = BeautifulSoup(response, "html.parser")
+		elements = dom.select("원하는 태그의 구성요소 넣으면 데이터 받아옴")
+			# select: 여러개의 element 객체를 리스트로 받아옴
+		elements = dom.select_one("원하는 태그의 구성요소 넣으면 데이터 받아옴")
+			# select_one: 하나의 element 객체를 리스트로 받아옴
+
+		ex) 다음 연관검색어 크롤링 함수
+			def daum_relational_key(query):
+			    url = 'https://search.daum.net/search?w=tot&DA=YZR&t__nil_searchbox=btn&sug=&sugo=&sq=&o=&q={}'.format(query)
+			    response = requests.get(url)
+			    dom = BeautifulSoup(response.text, "html.parser")
+			    elements = dom.select('span.wsn')
+			    return[element.text.strip() for element in elements]
+
+1-2-1. HTML 방식 심화
+	목적: 다음 뉴스 페이지에서 메인 기사 15개의 제목, 링크, 내용수집
+	의미: 1. 뉴스 페이지에서 메인기사 15개 제목, 링크 가져온뒤
+		2. 15개 링크로 내용을 수집
+	가) ~ 다) 를 거친뒤, 2번을 수행
+	ex)
+		def get_content(link):
+		    response = requests.get(link)
+		    dom = BeautifulSoup(response.content, 'html.parser')
+		    return dom.select_one("#harmonyContainer").text.strip().replace('\n', '')
+		articles_df["contents"] = articles_df["link"].apply(get_content)
+		articles_df.tail()
+
+
++ oauth 개념
+	user가 아닌 업체가 facebook service에 접근하기 위해
+
+	가) 개요
+		인터넷 서비스 = SaaS(Software as a Service)의 형태
+			+ SaaS: 서비스 중에서 사용자가 일부 필요한 것만 사용
+		ex) 별도의 인증 절차를 거치면/ 로그인 하지 않아도/ *외부 서비스에서 FaceBook이 트위터의 일부 기능 사용 가능*
+		+ 이득: Facebook이나 트위터 같은 서비스 제공자뿐만 아니라 사용자와 여러 인터넷 서비스 업체 모두에 이익
+
+		* 여기서, 별도의 인증 절차 -> OAuth
+	나) OAuth 설명
+		OAuth에서 Auth: Authentication(인증), Authorization(허가)
+			ex) OAuth 인증 진행시 '제 3자가 어떤 정보나 서비스에 사용자의 권한으로 접근하려 하는데 허용하겠느냐'
+		OAuth와 로그인은 반드시 분리해서 이해
+		ex) 로그인: 회사 직원이 사원증을 들고 출근
+			OAuth: 외부 손님이 방문증을 수령한후 출근
+		- OAuth 버전 별 차이
+			1.0 토큰 만료 기간 x VS 2.0 토큰 만료기간 o (+다만 아직 최종안 아님)
+	다) OAuth 동작
+	라) 출처: https://d2.naver.com/helloworld/24942
+
++ HTML
+	가) HTML: Hyper Text Markup Language의 약자
+		- 웹 문서를 작성하는 마크업 언어
+		- 웹 페이지를 구성하는 언어
+			- html: 화면의 레이아웃이나 텍스트
+			- css: 화면의 색상, 크기등의 스타일을 담당
+				 - css_selector 활용
+			- Javascript: 화면의 클릭, 드래그 등등의 이벤트
+	나) 구성요소
+		- Document: 페이지 전체를 의미
+		- Element:
+			- 계층적 구조로 이루어져 있으며 모여서 Document를 이룸
+			- 시작 태그와 끝 태그로 구성
+				ex) <div>...</div>
+		- Tag:
+			- 시작 태그와 끝 태그로 엘리먼트를 구성
+			- 시작 태그에는 여러가지 속성 값 존재
+			- 태그와 태그 사이에는 문자열 데이터를 가질수 있음
+			- 태그의 이름에 따라 목적이 달라짐
+		- Attribute:
+			- 시작 태그에 포함되는 속성값
+			- id, class: 엘리먼트를 선택하기 위한 목적으로 만들어진 속성값
+	다) 속성값
+		- id: 웹페이지에서 유일한 값
+		- class:
+			- 하나의 엘리먼트에 여러가지 값 사용 가능
+			- 웹페이지 내에서 여러가지의 값 사용 가능
+	라) 태그의 종류
+		- head
+		- p
+		- span
+		- div
+		- table
+		- ul, li
+		- a
+		- iframe
+		- input
+		- select, option
+
++ css-selector
+	가) HTML 엘리먼트에 CSS 스타일을 적용할때 엘리먼트를 선택하기 위한 방법
