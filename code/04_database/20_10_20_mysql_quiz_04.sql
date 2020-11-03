@@ -45,3 +45,4 @@ select * from category as c;
 	group by category.name
 	order by amount desc
 
+test

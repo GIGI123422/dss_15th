@@ -71,9 +71,7 @@ select * from countrylanguage as cl
 		having language_count <= 3
 		order by language_count desc
 	# 2. 도시인구가 300만 이상인 도시
-select ci.countrycode, ci.name, ci.Population, col.name, 
-	col.language_count, col.languages 
-from (
+create view city_language as(
 	SELECT co.code, co.name, 
 		group_concat(language) as languages, 
 		COUNT(cl.language) AS language_count
@@ -82,9 +80,13 @@ from (
 	GROUP BY co.name, co.code
 	HAVING language_count <= 3
 	ORDER BY language_count DESC
-) as col
+)
+
+select ci.countrycode, ci.name, ci.Population, cl.name, 
+	cl.language_count, cl.languages 
+from city_language as cl
 join city as ci
-on col.Code = ci.CountryCode
+on cl.Code = ci.CountryCode
 having ci.Population > 3000000
 order by population desc
 
